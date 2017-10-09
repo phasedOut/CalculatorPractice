@@ -10,6 +10,7 @@ import UIKit
 
 class ViewController: UIViewController {
     
+    @IBOutlet weak var descriptionDisplay: UILabel!
     @IBOutlet weak var display: UILabel!
     
     var userIsInTheMiddleOfTyping = false
@@ -55,6 +56,9 @@ class ViewController: UIViewController {
         }
         if let result = brain.result {
             displayValue = result
+        }
+        if let description = brain.description {
+            descriptionDisplay.text = description
         }
         userIsUsingADecimalPoint = false
     }
