@@ -8,8 +8,6 @@
 
 import Foundation
 
-//func multiply
-
 struct CalculatorBrain {
     
     private var accumulator: Double?
@@ -19,6 +17,8 @@ struct CalculatorBrain {
         case unaryOperation((Double) -> Double)
         case binaryOperation((Double, Double) -> Double)
         case equals
+        case clear
+        case clearEverything
     }
     
     private var operations: Dictionary<String,Operation> =
@@ -32,7 +32,9 @@ struct CalculatorBrain {
         "÷" : Operation.binaryOperation{$0 / $1},
         "−" : Operation.binaryOperation{$0 - $1},
         "+" : Operation.binaryOperation{$0 + $1},
-        "=" : Operation.equals
+        "=" : Operation.equals,
+        "C" : Operation.clear,
+        "C/E" : Operation.clearEverything
     ]
     
     mutating func performOperation(_ symbol: String) {
@@ -51,8 +53,20 @@ struct CalculatorBrain {
                 }
             case .equals:
                 performPendingBinaryOperation()
+            case .clear:
+                clear()
+            case .clearEverything:
+                clearEverything()
             }
         }
+    }
+    
+    private mutating func clear() {
+        accumulator = 0
+    }
+    private mutating func clearEverything() {
+        accumulator = 0
+        pendingBinaryOperation = nil
     }
     
     private mutating func performPendingBinaryOperation() {
