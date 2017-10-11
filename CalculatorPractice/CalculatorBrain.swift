@@ -12,7 +12,7 @@ struct CalculatorBrain {
     
     private var accumulator: Double?
     
-    private var resultIsPending = true
+    private var resultIsPending = false
     
     var description: String?
     
@@ -48,16 +48,18 @@ struct CalculatorBrain {
                 accumulator = value
             case .unaryOperation(let function):
                 if accumulator != nil {
-                    description = "\(symbol)(\(accumulator!))"
+                    description = "\(symbol)(\(description!))" //change to String(accumulator!)to revert
                     accumulator = function(accumulator!)
                 }
             case .binaryOperation(let function):
                 if accumulator != nil {
+                    resultIsPending = true
                     pendingBinaryOperation = PendingBinaryOperation(function: function, firstOperand: accumulator!, symbol: symbol)
-                    description = String(describing: pendingBinaryOperation!.firstOperand) + " \(symbol) ..."
+                    description = String(describing: pendingBinaryOperation!.firstOperand) + " \(symbol)" //+ " ..."
                     accumulator = nil
                 }
             case .equals:
+                resultIsPending = false
                 performPendingBinaryOperation()
             case .clear:
                 clear()
@@ -78,7 +80,7 @@ struct CalculatorBrain {
     
     private mutating func performPendingBinaryOperation() {
         if pendingBinaryOperation != nil && accumulator != nil {
-            description = String(describing: pendingBinaryOperation!.firstOperand) + String(describing: pendingBinaryOperation!.symbol) + String(accumulator!) + "="
+            description = String(describing: pendingBinaryOperation!.firstOperand) + String(describing: pendingBinaryOperation!.symbol) + String(description!) //+ "=" //change to String(accumulator!)to revert
             accumulator = pendingBinaryOperation!.perform(with: accumulator!)
             pendingBinaryOperation = nil
         }
@@ -96,6 +98,14 @@ struct CalculatorBrain {
         }
     }
     
+//    private func appendAppropiateStringToDescription(_ description: String) -> String {
+//        if resultIsPending {
+//            return str + " ..."
+//        } else {
+//            return str + " ="
+//        }
+//    }
+    
     mutating func setOperand(_ operand: Double) {
         accumulator = operand
         //description = String(operand)
@@ -104,6 +114,16 @@ struct CalculatorBrain {
     var result: Double? {
         get {
             return accumulator
+        }
+    }
+    
+    var descriptionResult: String? {
+        get {
+            if resultIsPending {
+                return description! + " ... "
+            } else {
+                return description! + " = "
+            }
         }
     }
     

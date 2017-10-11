@@ -57,7 +57,7 @@ class ViewController: UIViewController {
         if let result = brain.result {
             displayValue = result
         }
-        if let description = brain.description {
+        if let description = brain.descriptionResult {
             descriptionDisplay.text = description
         }
         userIsUsingADecimalPoint = false
