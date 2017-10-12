@@ -16,6 +16,10 @@ struct CalculatorBrain {
     
     var description: String?
     
+    
+    var savedDescription: String?
+
+    
     private enum Operation {
         case constant(Double)
         case unaryOperation((Double) -> Double)
@@ -48,18 +52,25 @@ struct CalculatorBrain {
                 accumulator = value
             case .unaryOperation(let function):
                 if accumulator != nil {
-                    description = "\(symbol)(\(description!))" //change to String(accumulator!)to revert
+                    if description != nil {
+                        description = "\(symbol)(\(description!))" //change to String(accumulator!)to revert
+                    } else {
+                        description = "\(symbol)(\(accumulator!))"
+                    }
                     accumulator = function(accumulator!)
                 }
             case .binaryOperation(let function):
                 if accumulator != nil {
                     resultIsPending = true
                     pendingBinaryOperation = PendingBinaryOperation(function: function, firstOperand: accumulator!, symbol: symbol)
-                    description = String(describing: pendingBinaryOperation!.firstOperand) + " \(symbol)" //+ " ..."
+                    if description != nil {
+                        description = description! + symbol
+                    } else {
+                        description = String(describing: pendingBinaryOperation!.firstOperand) + " \(symbol)" //+ " ..."
+                    }
                     accumulator = nil
                 }
             case .equals:
-                resultIsPending = false
                 performPendingBinaryOperation()
             case .clear:
                 clear()
@@ -75,15 +86,25 @@ struct CalculatorBrain {
     private mutating func clearEverything() {
         accumulator = 0
         pendingBinaryOperation = nil
-        description = ""
+        description = nil
     }
     
     private mutating func performPendingBinaryOperation() {
         if pendingBinaryOperation != nil && accumulator != nil {
-            description = String(describing: pendingBinaryOperation!.firstOperand) + String(describing: pendingBinaryOperation!.symbol) + String(description!) //+ "=" //change to String(accumulator!)to revert
+            //description = String(describing: pendingBinaryOperation!.firstOperand) + String(describing: pendingBinaryOperation!.symbol) + String(accumulator!) //+ "=" //change to String(accumulator!)to revert
+            if description != nil {
+                description = description! + String(accumulator!)
+            } else {
+                description = formDescription(String(describing: pendingBinaryOperation!.firstOperand), symbol: String(describing: pendingBinaryOperation!.symbol), op2: String(accumulator!))
+            }
             accumulator = pendingBinaryOperation!.perform(with: accumulator!)
             pendingBinaryOperation = nil
+            resultIsPending = false
         }
+    }
+    
+    private func formDescription(_ op1: String, symbol: String, op2: String) -> String {
+        return op1 + symbol + op2
     }
     
     private var pendingBinaryOperation: PendingBinaryOperation?
@@ -119,10 +140,14 @@ struct CalculatorBrain {
     
     var descriptionResult: String? {
         get {
-            if resultIsPending {
-                return description! + " ... "
+            if description != nil {
+                if resultIsPending {
+                    return description! + " ... "
+                } else {
+                    return description! + " = "
+                }
             } else {
-                return description! + " = "
+                return nil
             }
         }
     }
