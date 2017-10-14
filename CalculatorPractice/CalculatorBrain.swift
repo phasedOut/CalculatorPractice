@@ -16,6 +16,8 @@ struct CalculatorBrain {
     
     var description: String?
     
+    var temp: String = ""
+    
     private enum Operation {
         case constant(Double)
         case unaryOperation((Double) -> Double)
@@ -45,17 +47,40 @@ struct CalculatorBrain {
         if let operation = operations[symbol] {
             switch operation {
             case .constant(let value):
+                if description != nil {
+                    description! += String(accumulator!)
+                } else {
+                    description = String(accumulator!)
+                }
                 accumulator = value
             case .unaryOperation(let function):
+                if description != nil {
+                    if resultIsPending {
+                        temp = description! + "\(symbol)(\(accumulator!))"
+                        description = temp //change to String(accumulator!)to revert
+                    } else {
+                        description = "\(symbol)(\(description!))"
+                    }
+                } else {
+                    description = "\(symbol)(\(accumulator!))"
+                }
+                
                 if accumulator != nil {
-                    description = "\(symbol)(\(description!))" //change to String(accumulator!)to revert
                     accumulator = function(accumulator!)
                 }
+
             case .binaryOperation(let function):
                 if accumulator != nil {
                     resultIsPending = true
                     pendingBinaryOperation = PendingBinaryOperation(function: function, firstOperand: accumulator!, symbol: symbol)
-                    description = String(describing: pendingBinaryOperation!.firstOperand) + " \(symbol)" //+ " ..."
+                    
+                    if description != nil {
+                        description = description! + " \(symbol)" //+ " ..."
+                    } else {
+                        description = String(describing: pendingBinaryOperation!.firstOperand) + " \(symbol)" //+ " ..."
+                    }
+                    
+                    
                     accumulator = nil
                 }
             case .equals:
@@ -75,12 +100,18 @@ struct CalculatorBrain {
     private mutating func clearEverything() {
         accumulator = 0
         pendingBinaryOperation = nil
-        description = ""
+        description = nil
+        temp = ""
     }
     
     private mutating func performPendingBinaryOperation() {
         if pendingBinaryOperation != nil && accumulator != nil {
-            description = String(describing: pendingBinaryOperation!.firstOperand) + String(describing: pendingBinaryOperation!.symbol) + String(description!) //+ "=" //change to String(accumulator!)to revert
+            //description = String(describing: pendingBinaryOperation!.firstOperand) + String(describing: pendingBinaryOperation!.symbol) + String(accumulator!) //+ "=" //change to String(accumulator!)to revert
+            if description != nil {
+                description = description! + String(accumulator!)
+            } else {
+                description = String(describing: pendingBinaryOperation!.firstOperand) + String(describing: pendingBinaryOperation!.symbol) + String(accumulator!) //+ "=" //change to String(accumulator!)to revert
+            }
             accumulator = pendingBinaryOperation!.perform(with: accumulator!)
             pendingBinaryOperation = nil
         }
@@ -98,14 +129,6 @@ struct CalculatorBrain {
         }
     }
     
-//    private func appendAppropiateStringToDescription(_ description: String) -> String {
-//        if resultIsPending {
-//            return str + " ..."
-//        } else {
-//            return str + " ="
-//        }
-//    }
-    
     mutating func setOperand(_ operand: Double) {
         accumulator = operand
         //description = String(operand)
@@ -119,10 +142,14 @@ struct CalculatorBrain {
     
     var descriptionResult: String? {
         get {
-            if resultIsPending {
-                return description! + " ... "
+            if description != nil {
+                if resultIsPending {
+                    return description! + " ... "
+                } else {
+                    return description! + " = "
+                }
             } else {
-                return description! + " = "
+                return ""
             }
         }
     }
