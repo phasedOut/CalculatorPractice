@@ -12,6 +12,16 @@ struct CalculatorBrain {
     
     private var accumulator: Double?
     
+    private var resultIsPending = false
+    
+    var mybool = false
+    
+    var myOtherBool = false
+    
+    var description = ""
+    
+    //var temp: String = ""
+    
     private enum Operation {
         case constant(Double)
         case unaryOperation((Double) -> Double)
@@ -41,17 +51,42 @@ struct CalculatorBrain {
         if let operation = operations[symbol] {
             switch operation {
             case .constant(let value):
+                if description != "" {
+                    description += symbol
+                    myOtherBool = true
+                }
                 accumulator = value
+                
             case .unaryOperation(let function):
                 if accumulator != nil {
+                    if description != "" {
+                        if resultIsPending {
+                            description += symbol + "(\(accumulator!))"
+                            mybool = true
+                        } else {
+                            description = symbol + "(\(description))"
+                        }
+                    } else {
+                        description = "\(symbol)(\(accumulator!))"
+                    }
+
                     accumulator = function(accumulator!)
                 }
+                
             case .binaryOperation(let function):
                 if accumulator != nil {
-                    pendingBinaryOperation = PendingBinaryOperation(function: function, firstOperand: accumulator!)
+                    resultIsPending = true
+                    pendingBinaryOperation = PendingBinaryOperation(function: function, firstOperand: accumulator!, symbol: symbol)
+                    if description != "" {
+                        description += String(describing: pendingBinaryOperation!.symbol)
+                    } else {
+                        description = String(describing: pendingBinaryOperation!.firstOperand) + String(describing: pendingBinaryOperation!.symbol)
+                    }
                     accumulator = nil
                 }
+                
             case .equals:
+                resultIsPending = false
                 performPendingBinaryOperation()
             case .clear:
                 clear()
@@ -67,10 +102,19 @@ struct CalculatorBrain {
     private mutating func clearEverything() {
         accumulator = 0
         pendingBinaryOperation = nil
+        description = ""
+        //temp = ""
     }
     
     private mutating func performPendingBinaryOperation() {
         if pendingBinaryOperation != nil && accumulator != nil {
+            if !mybool {
+                if !myOtherBool {
+                    description += String(accumulator!)
+                }
+            }
+            mybool = false
+            myOtherBool = false
             accumulator = pendingBinaryOperation!.perform(with: accumulator!)
             pendingBinaryOperation = nil
         }
@@ -81,6 +125,7 @@ struct CalculatorBrain {
     private struct PendingBinaryOperation {
         let function: (Double, Double) -> Double
         let firstOperand: Double
+        let symbol: String
         
         func perform(with secondOperand: Double) -> Double {
             return function(firstOperand, secondOperand)
@@ -94,6 +139,20 @@ struct CalculatorBrain {
     var result: Double? {
         get {
             return accumulator
+        }
+    }
+    
+    var descriptionResult: String? {
+        get {
+            if description != "" {
+                if resultIsPending {
+                    return description + " ... "
+                } else {
+                    return description + " = "
+                }
+            } else {
+                return ""
+            }
         }
     }
     

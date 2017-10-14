@@ -10,15 +10,18 @@ import UIKit
 
 class ViewController: UIViewController {
     
+    @IBOutlet weak var descriptionDisplay: UILabel!
     @IBOutlet weak var display: UILabel!
     
     var userIsInTheMiddleOfTyping = false
     
     private var brain = CalculatorBrain()
     
+    private var userIsUsingADecimalPoint = false
+    
     var displayValue: Double {
         get {
-            return Double(display.text!)!
+            return Double(display.text!) ?? 0.0
         }
         set {
             display.text! = String(newValue)
@@ -27,6 +30,13 @@ class ViewController: UIViewController {
     
     @IBAction func touchButton(_ sender: UIButton) {
         let digit = sender.currentTitle!
+        if digit == "." {
+            if userIsUsingADecimalPoint {
+                return
+            } else {
+                userIsUsingADecimalPoint = true
+            }
+        }
         if userIsInTheMiddleOfTyping {
             let textCurrentlyInDisplay = display.text
             display.text = textCurrentlyInDisplay! + digit
@@ -47,6 +57,10 @@ class ViewController: UIViewController {
         if let result = brain.result {
             displayValue = result
         }
+        if let description = brain.descriptionResult {
+            descriptionDisplay.text = description
+        }
+        userIsUsingADecimalPoint = false
     }
 }
 
