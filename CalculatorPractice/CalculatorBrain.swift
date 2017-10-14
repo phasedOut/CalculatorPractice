@@ -12,7 +12,9 @@ struct CalculatorBrain {
     
     private var accumulator: Double?
     
-    private var resultIsPending = false
+    private var resultIsPending: Bool?
+    
+    var mybool = false
     
     var description = ""
     
@@ -47,14 +49,13 @@ struct CalculatorBrain {
         if let operation = operations[symbol] {
             switch operation {
             case .constant(let value):
-
                 accumulator = value
             case .unaryOperation(let function):
                 if accumulator != nil {
                     if description != "" {
-                        //temp = String(accumulator!)
                         if resultIsPending {
                             description += symbol + "(\(accumulator!))"
+                            mybool = true
                         } else {
                             description = symbol + "(\(description))"
                         }
@@ -94,7 +95,10 @@ struct CalculatorBrain {
     
     private mutating func performPendingBinaryOperation() {
         if pendingBinaryOperation != nil && accumulator != nil {
-            description += String(accumulator!)
+            if !mybool {
+                description += String(accumulator!)
+            }
+            mybool = false
             accumulator = pendingBinaryOperation!.perform(with: accumulator!)
             pendingBinaryOperation = nil
         }
@@ -114,9 +118,6 @@ struct CalculatorBrain {
     
     mutating func setOperand(_ operand: Double) {
         accumulator = operand
-
-        //description += String(operand)
-
     }
     
     var result: Double? {
@@ -127,10 +128,14 @@ struct CalculatorBrain {
     
     var descriptionResult: String? {
         get {
-            if resultIsPending {
-                return description + " ... "
+            if resultIsPending != nil {
+                if resultIsPending! {
+                    return description + " ... "
+                } else {
+                    return description + " = "
+                }
             } else {
-                return description + " = "
+                return ""
             }
         }
     }
