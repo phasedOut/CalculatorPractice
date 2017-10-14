@@ -48,9 +48,9 @@ struct CalculatorBrain {
             switch operation {
             case .constant(let value):
                 if description != nil {
-                    description! += String(accumulator!)
+                    description! += symbol
                 } else {
-                    description = String(accumulator!)
+                    description = symbol
                 }
                 accumulator = value
             case .unaryOperation(let function):
@@ -131,7 +131,6 @@ struct CalculatorBrain {
     
     mutating func setOperand(_ operand: Double) {
         accumulator = operand
-        //description = String(operand)
     }
     
     var result: Double? {
